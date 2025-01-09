@@ -1,11 +1,14 @@
 package de.unibayreuth.se.taskboard.api.mapper;
-
+import de.unibayreuth.se.taskboard.business.domain.User;
 import de.unibayreuth.se.taskboard.api.dtos.TaskDto;
 import de.unibayreuth.se.taskboard.api.dtos.UserDto;
 import de.unibayreuth.se.taskboard.business.domain.Task;
+import de.unibayreuth.se.taskboard.business.exceptions.UserNotFoundException;
+import de.unibayreuth.se.taskboard.business.ports.UserService;
 import lombok.NoArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
 import java.time.LocalDateTime;
@@ -16,33 +19,35 @@ import java.util.UUID;
 @ConditionalOnMissingBean // prevent IntelliJ warning about duplicate beans
 @NoArgsConstructor
 public abstract class TaskDtoMapper {
-    //TODO: Fix this mapper after resolving the other TODOs.
+    //TODO: Fix this mapper after resolving the other TODOs.(done i think)
 
-//    @Autowired
-//    private UserService userService;
-//    @Autowired
-//    private UserDtoMapper userDtoMapper;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserDtoMapper userDtoMapper;
 
     protected boolean utcNowUpdated = false;
     protected LocalDateTime utcNow;
 
-    //@Mapping(target = "assignee", expression = "java(getUserById(source.getAssigneeId()))")
-    @Mapping(target = "assignee", ignore = true)
+    @Mapping(target = "assignee", expression = "java(getUserById(source.getAssigneeId()))")
     public abstract TaskDto fromBusiness(Task source);
 
-    //@Mapping(target = "assigneeId", source = "assignee.id")
-    @Mapping(target = "assigneeId", ignore = true)
+    @Mapping(target = "assigneeId", source = "assignee.id")
     @Mapping(target = "status", source = "status", defaultValue = "TODO")
     @Mapping(target = "createdAt", expression = "java(mapTimestamp(source.getCreatedAt()))")
     @Mapping(target = "updatedAt", expression = "java(mapTimestamp(source.getUpdatedAt()))")
     public abstract Task toBusiness(TaskDto source);
 
     protected UserDto getUserById(UUID userId) {
-//        if (userId == null) {
-//            return null;
-//        }
-//        return userService.getById(userId).map(userDtoMapper::fromBusiness).orElse(null);
-        return null;
+        if (userId == null) {
+            return null;
+        }
+        try {
+            User user = userService.getById(userId);
+            return userDtoMapper.fromBusiness(user);
+        } catch (UserNotFoundException e) {
+            return null;
+        }
     }
 
     protected LocalDateTime mapTimestamp (LocalDateTime timestamp) {

@@ -22,11 +22,10 @@ public class TestFixtures {
     );
 
     public static List<User> createUsers(UserService userService) {
-        // TODO: Fix this after resolving the other TODOs.
-//        return USERS.stream()
-//                .map(userService::create)
-//                .collect(Collectors.toList());
-        return List.of();
+        // TODO: Fix this after resolving the other TODOs.(done i think)
+        return USERS.stream()
+                .map(userService::upsert)
+                .collect(Collectors.toList());
     }
 
     public static List<Task> createTasks(TaskService taskService) {
